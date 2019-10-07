@@ -14,5 +14,5 @@ const signingKey = JWK.generateSync('RSA', 2048, { use: 'sig', alg: 'PS256' })
 const keystore = new JWKS.KeyStore(key1, key2, signingKey);
 
 module.exports = {
-    CreateJwks : () => keystore.toJWKS(true)
+    createJwks : () => keystore.toJWKS(true)
 };
