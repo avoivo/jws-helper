@@ -3,10 +3,10 @@ const { JWK, JWS } = require('jose')
 const ISSUER = "some issuer";
 const TRUSTED_ANCOR = "localhost:3000";
 
-const createSignature = (payload, key) => {
+const createSignature = (alg, payload, key) => {
 
     const header = {
-        alg: "PS256",
+        alg: alg,
         typ: "JOSE",
         cty: "json",
         kid: key.kid,
@@ -30,16 +30,26 @@ const createSignature = (payload, key) => {
 
 }
 
+const X_PBX_ALG_HEADER = "x-pbx-alg";
+const defaultAlgorithm = "PS256";
+
 module.exports = {
     createConsentHandler : (jwks) => {
         jwks = jwks || {};
         let keys = jwks.keys || [];
 
-        var signingKey = keys.find((_) => _.alg == "PS256");
-
         return (req, res) => {
 
-            const jsonWebSignature = createSignature(req.body, signingKey);
+            const alg = req.header(X_PBX_ALG_HEADER) || defaultAlgorithm;
+
+            var signingKey = keys.find((_) => _.alg == alg);
+
+            if(signingKey === undefined){
+                throw "signingKey not found";
+            }
+
+
+            const jsonWebSignature = createSignature(alg, req.body, signingKey);
             const splitedSignature = jsonWebSignature.split(".");
             const signatureHeader = splitedSignature.shift();
             const signature = splitedSignature.pop();
