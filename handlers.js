@@ -9,10 +9,6 @@ const X_JWS_SIGNATURE = "x-jws-signature";
 const PS256 = "PS256";
 const RS256 = "RS256";
 
-const ISSUED_AT_CLAIM = "http://openbanking.org.uk/iat";
-const ISSUER_CLAIM = "http://openbanking.org.uk/iss";
-const TRUSTED_ANCHOR_CLAIM = "http://openbanking.org.uk/tan";
-
 const createSignature = (alg, payload, key) => {
 
     const header = {
@@ -21,14 +17,14 @@ const createSignature = (alg, payload, key) => {
         cty: "json",
         kid: key.kid,
         b64: false,
-        ISSUED_AT_CLAIM: new Date().getTime(),
-        ISSUER_CLAIM: ISSUER,
-        TRUSTED_ANCHOR_CLAIM: TRUSTED_ANCOR,
+        "http://openbanking.org.uk/iat": new Date().getTime(),
+        "http://openbanking.org.uk/iss": ISSUER,
+        "http://openbanking.org.uk/tan": TRUSTED_ANCOR,
         crit: [
             "b64",
-            ISSUED_AT_CLAIM,
-            ISSUER_CLAIM,
-            TRUSTED_ANCHOR_CLAIM,
+            "http://openbanking.org.uk/iat",
+            "http://openbanking.org.uk/iss",
+            "http://openbanking.org.uk/tan",
         ]
     };
 
