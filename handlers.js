@@ -9,25 +9,30 @@ const X_JWS_SIGNATURE = "x-jws-signature";
 const PS256 = "PS256";
 const RS256 = "RS256";
 
-const createSignature = (alg, payload, key) => {
+const signedRequestHeader = {
+    // alg: alg,
+    typ: "JOSE",
+    cty: "json",
+    // kid: key.kid,
+    b64: false,
+    "http://openbanking.org.uk/iat": new Date().getTime(),
+    "http://openbanking.org.uk/iss": ISSUER,
+    "http://openbanking.org.uk/tan": TRUSTED_ANCOR,
+    crit: [
+        "b64",
+        "http://openbanking.org.uk/iat",
+        "http://openbanking.org.uk/iss",
+        "http://openbanking.org.uk/tan",
+    ]
+};
 
-    const header = {
-        alg: alg,
-        typ: "JOSE",
-        cty: "json",
-        kid: key.kid,
-        b64: false,
-        "http://openbanking.org.uk/iat": new Date().getTime(),
-        "http://openbanking.org.uk/iss": ISSUER,
-        "http://openbanking.org.uk/tan": TRUSTED_ANCOR,
-        crit: [
-            "b64",
-            "http://openbanking.org.uk/iat",
-            "http://openbanking.org.uk/iss",
-            "http://openbanking.org.uk/tan",
-        ]
-    };
 
+const createSignature = (alg, payload, key, header) => {
+
+    header = header || {};
+
+    header["alg"] = alg;
+    header["kid"] = key.kid;
 
     let sign = new JWS.Sign(payload);
     sign.recipient(JWK.asKey(key), header);
@@ -183,7 +188,7 @@ module.exports = {
             }
 
 
-            const jsonWebSignature = createSignature(alg, req.body, signingKey);
+            const jsonWebSignature = createSignature(alg, req.body, signingKey, signedRequestHeader);
             const splitedSignature = jsonWebSignature.split(".");
             const signatureHeader = splitedSignature.shift();
             const signature = splitedSignature.pop();
@@ -215,6 +220,26 @@ module.exports = {
                 (body) => res.send(body),
                 (error) => res.status(400).send("Invalid signature"));
 
+
+        };
+    },
+    createDynamicClientRegistrationRequestHandlerFactory: (jwks) => {
+        jwks = jwks || {};
+        let keys = jwks.keys || [];
+
+        return (req, res) => {
+
+            const alg = req.header(X_PBX_ALG_HEADER) || PS256;
+
+            var signingKey = keys.find((_) => _.alg == alg);
+
+            if (!signingKey) {
+                throw "signingKey not found";
+            }
+
+
+            const jsonWebSignature = createSignature(alg, req.body, signingKey);
+            return res.send(jsonWebSignature);
 
         };
     }
