@@ -14,6 +14,7 @@ const jwks = createJwks();
 
 app.get('/jwks', (req, res) => res.json(jwks));
 app.get('/.well-known/openid-configuration', (req, res) => res.json({
+    issuer: req.protocol+"://"+ req.headers.host,
     jwks_uri:  req.protocol+"://"+ req.headers.host + "/jwks"
 }));
 
