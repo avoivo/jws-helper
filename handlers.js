@@ -8,6 +8,7 @@ const X_JWS_SIGNATURE = "x-jws-signature";
 
 const PS256 = "PS256";
 const RS256 = "RS256";
+const ES256 = "ES256";
 
 const signedRequestHeader = {
     // alg: alg,
@@ -55,7 +56,7 @@ const validateHeader = (header) => {
         return false;
     }
 
-    if (headerAsJson.alg !== PS256 && headerAsJson.alg !== RS256) {
+    if (headerAsJson.alg !== PS256 && headerAsJson.alg !== RS256 && headerAsJson.alg !== ES256) {
         console.log("header.alg is not valid");
         return false;
     }
