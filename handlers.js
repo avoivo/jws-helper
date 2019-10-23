@@ -16,7 +16,7 @@ const signedRequestHeader = {
     cty: "json",
     // kid: key.kid,
     b64: false,
-    "http://openbanking.org.uk/iat": new Date().getTime(),
+    "http://openbanking.org.uk/iat": Math.round((new Date()).getTime() / 1000),
     "http://openbanking.org.uk/iss": ISSUER,
     "http://openbanking.org.uk/tan": TRUSTED_ANCOR,
     crit: [
