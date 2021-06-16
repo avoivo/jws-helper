@@ -100,12 +100,12 @@ const validateHeader = (header) => {
         "b64", ISSUED_AT_CLAIM, ISSUER_CLAIM, TRUSTED_ANCHOR_CLAIM
     ];
 
-    if(!headerAsJson.crit){
+    if (!headerAsJson.crit) {
         console.log("header.crit is not present");
         return false;
     }
 
-    if(headerAsJson.crit.sort().join(",") !== acceptedValue.sort().join(",")){
+    if (headerAsJson.crit.sort().join(",") !== acceptedValue.sort().join(",")) {
         console.log("header.crit is not valid");
         return false;
     }
@@ -120,7 +120,7 @@ const validateSignature = (header, payload, signature, onSuccess, onError) => {
     const trustedAnchorParts = headerAsJson[TRUSTED_ANCHOR_CLAIM].split(":").join(" ").split("/").join(" ").split(" ");
 
     let wellKnownUrl;
-    if(trustedAnchorParts[0] === "localhost"){
+    if (trustedAnchorParts[0] === "localhost") {
         wellKnownUrl = "http://";
     } else {
         wellKnownUrl = "https://";
@@ -131,41 +131,41 @@ const validateSignature = (header, payload, signature, onSuccess, onError) => {
 
     request.get(
         wellKnownUrl,
-         (error, response, body) => {
+        (error, response, body) => {
             if (!error && response.statusCode == 200) {
                 var bodyAsJson = JSON.parse(body);
 
-                
+
 
                 request.get(
                     bodyAsJson["jwks_uri"],
-                     (error, response, body) => {
+                    (error, response, body) => {
                         if (!error && response.statusCode == 200) {
                             let verificationResult;
-                            try{
+                            try {
                                 const keyStore = JWKS.asKeyStore(JSON.parse(body));
 
                                 let buff = new Buffer(payload);
                                 let base64data = buff.toString('base64');
-                                
+
 
                                 verificationResult = JWS.verify(`${header}.${base64data}.${signature}`, keyStore, {
-                                    crit : ["b64", ISSUED_AT_CLAIM, ISSUER_CLAIM, TRUSTED_ANCHOR_CLAIM]
+                                    crit: ["b64", ISSUED_AT_CLAIM, ISSUER_CLAIM, TRUSTED_ANCHOR_CLAIM]
                                 });
                             }
-                            catch(e){
+                            catch (e) {
                                 return onError(e);
                             }
 
                             onSuccess(verificationResult);
-                        }else{
+                        } else {
                             onError(error);
                         }
-            
+
                     }
                 );
 
-            }else{
+            } else {
                 onError(error);
             }
 
@@ -188,6 +188,7 @@ module.exports = {
                 throw "signingKey not found";
             }
 
+            signedRequestHeader["http://openbanking.org.uk/tan"] = req.protocol + "://" + req.headers.host;
 
             const jsonWebSignature = createSignature(alg, req.body, signingKey, signedRequestHeader);
             const splitedSignature = jsonWebSignature.split(".");
@@ -217,7 +218,7 @@ module.exports = {
                 return res.status(400).send("Invalid signature header");
             }
 
-            validateSignature(signatureParts[0], req.body, signatureParts[1], 
+            validateSignature(signatureParts[0], req.body, signatureParts[1],
                 (body) => res.send(body),
                 (error) => res.status(400).send("Invalid signature"));
 
